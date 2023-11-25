@@ -1,5 +1,10 @@
+import time
 import requests
 import selectorlib
+import smtplib
+import ssl
+import os
+from dotenv import load_dotenv
 
 URL = "https://programmer100.pythonanywhere.com/tours/"
 
@@ -18,10 +23,31 @@ def extract(source):
     return value
 
 
-def send_email():
-    """Dummy function! Will be updated later with email sending
-    functionality"""
-    print("Email was sent!")
+def send_email(message):
+    """Send an email indicating new upcoming tour."""
+    # Gmail SMTP server details
+    host = "smtp.gmail.com"
+    port = 465
+
+    # Load email and app password from environmental variables
+    load_dotenv()
+    sender_email = os.getenv("EMAIL")
+    receiver_email = os.getenv("EMAIL")
+    app_password = os.getenv("PASSWORD")
+
+    # Create a secure SSL context
+    context = ssl.create_default_context()
+
+    # Convert the message to bytes using UTF-8 encoding
+    message = message.encode('utf-8')
+
+    # Connect to the SMTP server and send the email
+    with smtplib.SMTP_SSL(host, port, context=context) as server:
+        # Login to the sender's Gmail account
+        server.login(sender_email, app_password)
+
+        # Send the email from the sender to the receiver
+        server.sendmail(sender_email, receiver_email, message)
 
 
 def store(extracted):
@@ -36,13 +62,19 @@ def read():
         return file.read()
 
 
-# Scrape the website and extract tour information
-scraped = scrape(URL)
-extracted = extract(scraped)
-content = read()
+while True:
+    # Scrape the website and extract tour information
+    scraped = scrape(URL)
+    extracted = extract(scraped)
+    content = read()
 
-# Check for new upcoming tours, store and send an email if found
-if extracted.lower() != "no upcoming tours":
-    if extracted not in content:
-        store(extracted)
-        send_email()
+    # Check for new upcoming tours, store and send an email if found
+    if extracted.lower() != "no upcoming tours":
+        if extracted not in content:
+            store(extracted)
+            send_email(message="Subject: New Event!" +
+                               "\n" +
+                               "Hey, a new event has been found!" +
+                               "\n" +
+                               f"{extracted}")
+    time.sleep(2)
