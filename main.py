@@ -81,7 +81,6 @@ while True:
     # Scrape the website and extract tour information
     scraped = scrape(URL)
     extracted = extract(scraped)
-    print(extracted)
 
     # Check for new upcoming tours, store and send an email if found
     if extracted.lower() != "no upcoming tours":
