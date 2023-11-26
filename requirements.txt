@@ -1,0 +1,15 @@
+certifi==2023.11.17
+charset-normalizer==3.3.2
+click==8.1.7
+cssselect==1.2.0
+idna==3.4
+jmespath==1.0.1
+lxml==4.9.3
+packaging==23.2
+parsel==1.8.1
+python-dotenv==1.0.0
+PyYAML==6.0.1
+requests==2.31.0
+selectorlib==0.16.0
+urllib3==2.1.0
+w3lib==2.1.2
