@@ -4,9 +4,14 @@ import selectorlib
 import smtplib
 import ssl
 import os
+import sqlite3
 from dotenv import load_dotenv
 
+# URL of the website to scrape
 URL = "https://programmer100.pythonanywhere.com/tours/"
+
+# Establish connection to the SQLite database
+connection = sqlite3.connect("data.db")
 
 
 def scrape(url):
@@ -51,30 +56,43 @@ def send_email(message):
 
 
 def store(extracted):
-    """Store extracted data into a text file."""
-    with open("data.txt", "a") as file:
-        file.write(extracted + "\n")
+    """Store extracted data into the SQLite database."""
+    rows = extracted.split(",")
+    rows = [item.strip() for item in rows]
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO events VALUES(?,?,?)", rows)
+    connection.commit()
 
 
-def read():
-    """Read and return the content from the data.txt file."""
-    with open("data.txt", "r") as file:
-        return file.read()
+def read(extracted):
+    """Read and return the content from the database."""
+    rows = extracted.split(",")
+    rows = [item.strip() for item in rows]
+    band, city, date = rows
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM events WHERE band=? AND city=? AND date=?",
+                   (band, city, date))
+    rows = cursor.fetchall()
+    return rows
 
 
+# Continuously scrape the website and process tour information
 while True:
     # Scrape the website and extract tour information
     scraped = scrape(URL)
     extracted = extract(scraped)
-    content = read()
+    print(extracted)
 
     # Check for new upcoming tours, store and send an email if found
     if extracted.lower() != "no upcoming tours":
-        if extracted not in content:
+        content = read(extracted)
+        if not content:
             store(extracted)
             send_email(message="Subject: New Event!" +
                                "\n" +
                                "Hey, a new event has been found!" +
                                "\n" +
                                f"{extracted}")
+
+    # Pause for 2 seconds before the next scrape
     time.sleep(2)
